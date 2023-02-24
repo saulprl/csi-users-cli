@@ -1,0 +1,26 @@
+{
+  "name": "csi-users-cli",
+  "version": "0.1.0",
+  "description": "A CLI app to conveniently create users for CSI Door Access.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saulprl/csi-users-cli.git"
+  },
+  "keywords": [
+    "cli",
+    "csi",
+    "door",
+    "access",
+    "users"
+  ],
+  "author": "saulprl",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/saulprl/csi-users-cli/issues"
+  },
+  "homepage": "https://github.com/saulprl/csi-users-cli#readme"
+}
