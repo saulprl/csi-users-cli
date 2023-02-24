@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "A CLI app to conveniently create users for CSI Door Access.",
   "main": "index.js",
+  "type": "module",
   "bin": {
     "csi-users": "./index.js"
   },
@@ -27,7 +28,9 @@
   },
   "homepage": "https://github.com/saulprl/csi-users-cli#readme",
   "dependencies": {
+    "chalk": "^5.2.0",
     "enquirer": "^2.3.6",
-    "node-fetch": "^3.3.0"
+    "node-fetch": "^3.3.0",
+    "ora": "^6.1.2"
   }
 }
