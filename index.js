@@ -3,6 +3,9 @@ import { Chalk } from "chalk";
 import fetch from "node-fetch";
 import enquirer from "enquirer";
 
+const UNISON_ID_REGEX = /^(21){1}\d{1}(2){1}\d{5}$/gm;
+const PASSCODE_REGEX = /^(?=.*[\d])(?=.*[A-D])[\dA-D]{4,8}$/gm;
+
 const { prompt, Confirm, Invisible, Select } = enquirer;
 
 const timeout = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -42,7 +45,7 @@ const createUser = async () => {
             .bold("número de expediente")} debe contener 9 dígitos.`;
         }
 
-        return /^(21){1}\d{1}(2){1}\d{5}$/gm.test(unisonId)
+        return UNISON_ID_REGEX.test(unisonId)
           ? true
           : `El ${chalk
               .hex("#F51A9B")
@@ -53,10 +56,12 @@ const createUser = async () => {
 
   const passcode = new Invisible({
     name: "passcode",
-    message: `Ingresa tu ${chalk.black("contraseña")}`,
+    message: `Ingresa tu ${chalk.black(
+      "contraseña"
+    )} (debe contener al menos un número y una de las letras ABCD)`,
     result: (passcode) => passcode.toUpperCase(),
     validate: (passcode) => {
-      if (!/^[\dABCD]{4,8}$/gm.test(passcode.toUpperCase())) {
+      if (!PASSCODE_REGEX.test(passcode.toUpperCase())) {
         return `La ${chalk.black(
           "contraseña"
         )} solo puede contener números, las letras A, B, C y D, y tener una longitud de 4 a 8 caracteres.`;
@@ -84,7 +89,7 @@ const createUser = async () => {
   };
 
   spinner = ora("Creando usuario...").start();
-  await sleep(1250);
+  await sleep(1750);
 
   // POST request to API.
   const res = await fetch("http://localhost:3000/api/users/add", {
@@ -102,7 +107,7 @@ const createUser = async () => {
   }
 
   spinner = ora("Generando nueva CSI ID...").start();
-  await sleep(1250);
+  await sleep(1750);
 
   spinner.stop();
 
@@ -148,7 +153,7 @@ const recoverCsiId = async () => {
             .bold("número de expediente")} debe contener 9 dígitos.`;
         }
 
-        return /^(21){1}\d{1}(2){1}\d{5}$/gm.test(unisonId)
+        return UNISON_ID_REGEX.test(unisonId)
           ? true
           : `El ${chalk
               .hex("#F51A9B")
@@ -171,7 +176,8 @@ const recoverCsiId = async () => {
 
   spinner.stop();
   if (!res.ok) {
-    console.log("Ocurrió un error al conectar con la API.");
+    const jsonRes = await res.json();
+    console.log(`Ocurrió un error al conectar con la API: ${jsonRes.message}`);
     return;
   }
 
@@ -182,9 +188,9 @@ const recoverCsiId = async () => {
   spinner.stop();
 
   console.log(
-    `Tu ${chalk.hex("#7145D6").bold("CSI ID")} es ${chalk
+    `\n\n\n\n\n\n\n\nTu ${chalk.hex("#7145D6").bold("CSI ID")} es ${chalk
       .hex("#7145D6")
-      .bold(jsonRes["csiId"])}`
+      .bold(jsonRes["csiId"])}.`
   );
 };
 
@@ -222,7 +228,7 @@ const changePasscode = async () => {
             .bold("número de expediente")} debe contener 9 dígitos.`;
         }
 
-        return /^(21){1}\d{1}(2){1}\d{5}$/gm.test(unisonId)
+        return UNISON_ID_REGEX.test(unisonId)
           ? true
           : `El ${chalk
               .hex("#F51A9B")
@@ -235,23 +241,17 @@ const changePasscode = async () => {
     name: "oldPasscode",
     message: `Ingresa tu ${chalk.black("anterior contraseña")}`,
     result: (passcode) => passcode.toUpperCase(),
-    validate: (passcode) => {
-      if (!/^[\dABCD]{4,8}$/gm.test(passcode.toUpperCase())) {
-        return `La ${chalk.black(
-          "contraseña"
-        )} solo puede contener números, las letras A, B, C y D, y tener una longitud de 4 a 8 caracteres.`;
-      }
-
-      return true;
-    },
+    validate: (passcode) => passcode.length > 0,
   }).run();
 
   const newPasscode = new Invisible({
     name: "newPasscode",
-    message: `Ingresa tu ${chalk.black("nueva contraseña")}`,
+    message: `Ingresa tu ${chalk.black(
+      "nueva contraseña"
+    )} (debe contener al menos un número y una de las letras ABCD)`,
     result: (passcode) => passcode.toUpperCase(),
     validate: (passcode) => {
-      if (!/^[\dABCD]{4,8}$/gm.test(passcode.toUpperCase())) {
+      if (!PASSCODE_REGEX.test(passcode.toUpperCase())) {
         return `La ${chalk.black(
           "contraseña"
         )} solo puede contener números, las letras A, B, C y D, y tener una longitud de 4 a 8 caracteres.`;
@@ -290,7 +290,10 @@ const changePasscode = async () => {
   spinner.stop();
 
   if (!res.ok) {
-    console.log("Ocurrió un error durante la actualización.");
+    const jsonRes = await res.json();
+    console.log(
+      `Ocurrió un error durante la actualización: ${chalk.red(jsonRes.message)}`
+    );
     return;
   }
 
@@ -314,6 +317,7 @@ const mainMenu = async () => {
       { name: "Registrar usuario" },
       { name: "Recuperar CSI ID" },
       { name: "Cambiar contraseña" },
+      { name: "Salir" },
     ],
   });
 
@@ -328,6 +332,11 @@ const mainMenu = async () => {
       break;
     case "Cambiar contraseña":
       await changePasscode();
+      break;
+    case "Salir":
+      const spinner = ora("Saliendo...").start();
+      await sleep(1000);
+      spinner.stop();
       break;
     default:
       console.log("Opción no válida");
