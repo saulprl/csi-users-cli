@@ -3,7 +3,7 @@ import { Chalk } from "chalk";
 import fetch from "node-fetch";
 import enquirer from "enquirer";
 
-const UNISON_ID_REGEX = /^(21){1}\d{1}(2){1}\d{5}$/gm;
+const UNISON_ID_REGEX = /^2(\d){2}2\d{5}$/gm;
 const PASSCODE_REGEX = /^(?=.*[\d])(?=.*[A-D])[\dA-D]{4,8}$/gm;
 
 const { prompt, Confirm, Invisible, Select } = enquirer;
@@ -30,14 +30,16 @@ const createUser = async () => {
     {
       type: "input",
       name: "name",
-      message: `¿Cuál es tu ${chalk.blue("nombre")}?`,
+      message: `¿Cuál es tu ${chalk.blue("nombre")}? ${chalk.cyan(
+        "(v. gr. Saúl Ramos)"
+      )}`,
     },
     {
       type: "input",
       name: "unisonId",
       message: `Ingresa tu ${chalk
         .hex("#F51A9B")
-        .bold("número de expediente")}`,
+        .bold("número de expediente")} ${chalk.cyan("(v. gr. 217200160)")}`,
       validate: (unisonId) => {
         if (unisonId.length !== 9) {
           return `El ${chalk
@@ -58,7 +60,7 @@ const createUser = async () => {
     name: "passcode",
     message: `Ingresa tu ${chalk.black(
       "contraseña"
-    )} (debe contener al menos un número y una de las letras ABCD)`,
+    )} (4-8 caracteres, debe contener al menos un número \ny una de las letras ABCD)`,
     result: (passcode) => passcode.toUpperCase(),
     validate: (passcode) => {
       if (!PASSCODE_REGEX.test(passcode.toUpperCase())) {
@@ -120,17 +122,7 @@ const createUser = async () => {
       .bold(csiId)}.\n`
   );
   console.log(chalk.bgHex("#7145D6").bold("Happy hacking!\n"));
-  await sleep(2000);
-
-  const addAnother = new Confirm({
-    name: "addAnother",
-    message: `¿Añadir otro ${chalk.green("usuario")}?`,
-  });
-
-  if (await addAnother.run()) {
-    console.log("\n\n\n\n\n\n");
-    await createUser();
-  }
+  await sleep(3000);
 };
 
 const recoverCsiId = async () => {
@@ -188,10 +180,14 @@ const recoverCsiId = async () => {
   spinner.stop();
 
   console.log(
-    `\n\n\n\n\n\n\n\nTu ${chalk.hex("#7145D6").bold("CSI ID")} es ${chalk
+    `Tu ${chalk.hex("#7145D6").bold("CSI ID")} es ${chalk
       .hex("#7145D6")
       .bold(jsonRes["csiId"])}.`
   );
+
+  await sleep(3000);
+
+  console.log("\n\n\n\n\n\n\n\n");
 };
 
 const changePasscode = async () => {
@@ -248,7 +244,7 @@ const changePasscode = async () => {
     name: "newPasscode",
     message: `Ingresa tu ${chalk.black(
       "nueva contraseña"
-    )} (debe contener al menos un número y una de las letras ABCD)`,
+    )} (4-8 caracteres, debe contener al menos un número y una de las letras ABCD)`,
     result: (passcode) => passcode.toUpperCase(),
     validate: (passcode) => {
       if (!PASSCODE_REGEX.test(passcode.toUpperCase())) {
@@ -307,39 +303,47 @@ const changePasscode = async () => {
       "correctamente"
     )}.`
   );
+
+  await sleep(3000);
 };
 
 const mainMenu = async () => {
-  const option = new Select({
-    name: "task",
-    message: "¿Qué deseas hacer?",
-    choices: [
-      { name: "Registrar usuario" },
-      { name: "Recuperar CSI ID" },
-      { name: "Cambiar contraseña" },
-      { name: "Salir" },
-    ],
-  });
+  let loop = true;
 
-  const task = await option.run();
+  while (loop) {
+    const option = new Select({
+      name: "task",
+      message: "¿Qué deseas hacer?",
+      choices: [
+        { name: "Registrar usuario" },
+        { name: "Recuperar CSI ID" },
+        { name: "Cambiar contraseña" },
+        { name: "Salir" },
+      ],
+    });
 
-  switch (task) {
-    case "Registrar usuario":
-      await createUser();
-      break;
-    case "Recuperar CSI ID":
-      await recoverCsiId();
-      break;
-    case "Cambiar contraseña":
-      await changePasscode();
-      break;
-    case "Salir":
-      const spinner = ora("Saliendo...").start();
-      await sleep(1000);
-      spinner.stop();
-      break;
-    default:
-      console.log("Opción no válida");
+    const task = await option.run();
+
+    switch (task) {
+      case "Registrar usuario":
+        await createUser();
+        break;
+      case "Recuperar CSI ID":
+        await recoverCsiId();
+        break;
+      case "Cambiar contraseña":
+        await changePasscode();
+        break;
+      case "Salir":
+        const spinner = ora("Saliendo...").start();
+        await sleep(1000);
+        spinner.stop();
+        loop = false;
+        break;
+      default:
+        console.log("Opción no válida");
+        await sleep(1000);
+    }
   }
 };
 
